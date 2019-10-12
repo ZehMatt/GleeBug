@@ -49,7 +49,7 @@ namespace GleeBug
         mContinueStatus = DBG_CONTINUE;
 
         //set back the instruction pointer
-        Registers(mThread->hThread, CONTEXT_CONTROL).Gip = info.address;
+        mThread->registers.Gip = info.address;
 
         //restore the original breakpoint byte and do an internal step
         mProcess->MemWriteUnsafe(info.address, info.internal.software.oldbytes, info.internal.software.size);
@@ -108,7 +108,7 @@ namespace GleeBug
     void Debugger::exceptionHardwareBreakpoint(ptr exceptionAddress)
     {
         //determine the hardware breakpoint triggered
-        Registers registers(mThread->hThread, CONTEXT_DEBUG_REGISTERS);
+        Registers& registers = mThread->registers;
         ptr dr6 = registers.Dr6();
         HardwareSlot breakpointSlot;
         ptr breakpointAddress;

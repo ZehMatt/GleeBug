@@ -14,7 +14,7 @@ namespace GleeBug
         friend class Thread;
 
     public:
-        Registers(HANDLE hThread, DWORD ContextFlags = CONTEXT_ALL);
+        Registers(HANDLE hThread);
         ~Registers();
         Registers(const Registers &) = delete;
         Registers(const Registers &&) = delete;
@@ -156,13 +156,39 @@ namespace GleeBug
         /**
         \brief Gets a pointer to the context object.
         \return This function will never return a nullptr.
+        \note This will cause invalidation, only use when required to modify.
         */
-        PCONTEXT GetContext();
+        CONTEXT& GetContextForModify();
+
+        /**
+        \brief Gets a pointer to the context object.
+        \return This function will never return a nullptr.
+        \note This will cause invalidation, only use when required to modify.
+        */
+        const CONTEXT& GetContext() const;
+
+        /**
+        \brief Marks the context as modified, this must be done when modifying the context.
+        */
+        void Invalidate();
+
+        /**
+        \brief Reads the context information into the local context variable.
+        \return Returns false on failure.
+        */
+        bool ReadContext();
+
+        /**
+        \brief Writes the context if marked invalidated, will reset the invalidation flag.
+        \return Returns false on failure.
+        */
+        bool WriteContext();
 
     private:
-        HANDLE hThread;
+        HANDLE mThread;
         CONTEXT mContext;
         CONTEXT mOldContext;
+        bool mInvalidated = false;
 
         void* getPtr(R reg);
     };

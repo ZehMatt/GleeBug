@@ -3,6 +3,7 @@
 
 #include "Debugger.Global.h"
 #include "Debugger.Breakpoint.h"
+#include "Debugger.Thread.Registers.h"
 
 namespace GleeBug
 {
@@ -21,6 +22,7 @@ namespace GleeBug
         bool isSingleStepping;
         bool isInternalStepping;
         StepCallback cbInternalStep;
+        Registers registers;
 
         /**
         \brief Constructor.

@@ -2,7 +2,7 @@
 
 namespace GleeBug
 {
-    Registers::Registers(HANDLE hThread, DWORD ContextFlags) :
+    Registers::Registers(HANDLE hThread) :
         Dr0(this),
         Dr1(this),
         Dr2(this),
@@ -104,29 +104,66 @@ namespace GleeBug
         Ss(this),
 
         TrapFlag(this),
-        ResumeFlag(this)
+        ResumeFlag(this),
+        mThread(hThread)
     {
-        memset(&mContext, 0, sizeof(CONTEXT));
-        mContext.ContextFlags = ContextFlags;
-        if (!!GetThreadContext(hThread, &mContext))
-        {
-            this->hThread = hThread;
-            memcpy(&mOldContext, &mContext, sizeof(CONTEXT));
-        }
-        else
-        {
-            this->hThread = nullptr;
-        }
+        ReadContext();
     }
 
     Registers::~Registers()
     {
-        if (hThread && memcmp(&mContext, &mOldContext, sizeof(CONTEXT)) != 0)
-            SetThreadContext(hThread, &mContext);
+        WriteContext();
     }
 
-    PCONTEXT Registers::GetContext()
+    CONTEXT& Registers::GetContextForModify()
     {
-        return &mContext;
+        Invalidate();
+        return mContext;
     }
+
+    const CONTEXT& Registers::GetContext() const
+    {
+        return mContext;
+    }
+
+    void Registers::Invalidate()
+    {
+        mInvalidated = true;
+    }
+
+    bool Registers::ReadContext()
+    {
+        if(mThread == nullptr)
+            return false;
+
+        memset(&mContext, 0, sizeof(CONTEXT));
+        mContext.ContextFlags = CONTEXT_ALL;
+        if (!!GetThreadContext(mThread, &mContext))
+        {
+            memcpy(&mOldContext, &mContext, sizeof(CONTEXT));
+            return true;
+        }
+        else
+        {
+            mThread = nullptr;
+        }
+        return false;
+    }
+
+    bool Registers::WriteContext()
+    {
+        if(mThread == nullptr)
+            return false;
+
+        if (mInvalidated && memcmp(&mContext, &mOldContext, sizeof(CONTEXT)) != 0)
+        {
+            mInvalidated = false;
+            if (SetThreadContext(mThread, &mContext) == 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
 };

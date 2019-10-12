@@ -10,6 +10,7 @@ namespace GleeBug
         mIsDebugging = true;
         mDetach = false;
         mDetachAndBreak = false;
+        Thread* currentThread = nullptr;
 
         //use correct WaitForDebugEvent function
         typedef BOOL(WINAPI *MYWAITFORDEBUGEVENT)(
@@ -66,22 +67,25 @@ namespace GleeBug
                 auto threadFound = mProcess->threads.find(mDebugEvent.dwThreadId);
                 if (threadFound != mProcess->threads.end())
                 {
-                    mThread = mProcess->thread = threadFound->second.get();
+                    currentThread = mThread = mProcess->thread = threadFound->second.get();
                 }
                 else
                 {
-                    mThread = mProcess->thread = nullptr;
+                    currentThread = mThread = mProcess->thread = nullptr;
                 }
             }
             else
             {
-                mThread = nullptr;
+                currentThread = mThread = nullptr;
                 if (mProcess)
                 {
                     mProcess->thread = nullptr;
                     mProcess = nullptr;
                 }
             }
+
+            if(currentThread)
+                currentThread->registers.ReadContext();
 
             //call the pre debug event callback
             cbPreDebugEvent(mDebugEvent);
@@ -133,11 +137,16 @@ namespace GleeBug
             }
 
             //clear trap flag when set by GleeBug (to prevent an EXCEPTION_SINGLE_STEP after detach)
-            if (mDetach && mThread)
+            if (mDetach && currentThread)
             {
-                if (mThread->isInternalStepping || mThread->isSingleStepping)
-                    Registers(mThread->hThread, CONTEXT_CONTROL).TrapFlag = false;
+                if (currentThread->isInternalStepping || currentThread->isSingleStepping)
+                {
+                    currentThread->registers.TrapFlag = false;
+                }
             }
+
+            if(currentThread)
+                currentThread->registers.WriteContext();
 
             //continue the debug event
             if (!ContinueDebugEvent(mDebugEvent.dwProcessId, mDebugEvent.dwThreadId, mContinueStatus))

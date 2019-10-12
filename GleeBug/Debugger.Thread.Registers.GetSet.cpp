@@ -258,6 +258,8 @@ namespace GleeBug
 
     void Registers::Set(R reg, ptr value)
     {
+        mInvalidated = true;
+
         switch (reg)
         {
         case R::DR0:
@@ -560,6 +562,8 @@ namespace GleeBug
             mContext.EFlags |= ptr(flag);
         else
             mContext.EFlags &= ~ptr(flag);
+
+        mInvalidated = true;
     }
 
     void* Registers::getPtr(R reg)

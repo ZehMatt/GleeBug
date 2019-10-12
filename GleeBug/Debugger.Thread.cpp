@@ -10,13 +10,14 @@ namespace GleeBug
         lpStartAddress(ptr(lpStartAddress)),
         isSingleStepping(false),
         isInternalStepping(false),
-        cbInternalStep(nullptr)
+        cbInternalStep(nullptr),
+        registers(hThread)
     {
     }
 
     void Thread::StepInto()
     {
-        Registers(hThread).TrapFlag.Set();
+        registers.TrapFlag.Set();
         isSingleStepping = true;
     }
 
@@ -38,7 +39,7 @@ namespace GleeBug
 
     void Thread::StepInternal(const StepCallback & cbStep)
     {
-        Registers(hThread).TrapFlag.Set();
+        registers.TrapFlag.Set();
         isInternalStepping = true;
         cbInternalStep = cbStep;
     }

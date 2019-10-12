@@ -74,8 +74,7 @@ namespace GleeBug
 
     bool Debugger::UnsafeDetach()
     {
-        // TODO: remove from all threads?
-        Registers(mThread->hThread, CONTEXT_CONTROL).TrapFlag = false;
+        mThread->registers.TrapFlag = false;
         return !!DebugActiveProcessStop(mMainProcess.dwProcessId);
     }
 
@@ -91,7 +90,7 @@ namespace GleeBug
             return false;
 
         //trigger an EXCEPTION_SINGLE_STEP in the debuggee
-        Registers(mThread->hThread, CONTEXT_CONTROL).TrapFlag = true;
+        mThread->registers.TrapFlag = true;
 
         //detach from the process
         return UnsafeDetach();

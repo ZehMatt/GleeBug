@@ -344,16 +344,45 @@ public:
         HANDLE hThread;
     };
 
+    Thread* GetThreadFromHandle(HANDLE hThread)
+    {
+        if(hThread == nullptr)
+            return nullptr;
+
+        uint32_t threadId = GetThreadId(hThread);
+        if (mThread && threadId == mThread->dwThreadId)
+        {
+            return mThread;
+        }
+
+        auto it = mProcess->threads.find(threadId);
+        if(it != mProcess->threads.end())
+            return it->second.get();
+
+        return nullptr;
+    }
+
     //Registers
     ULONG_PTR GetContextDataEx(HANDLE hActiveThread, DWORD IndexOfRegister)
     {
         if (!hActiveThread)
             return 0;
 
+        if(!mProcess)
+            return 0;
+
         ThreadSuspender suspender(hActiveThread, mIsRunning);
         auto r = registerFromDword(IndexOfRegister);
         if (r == Registers::R::Invalid)
             __debugbreak();
+
+        // Prioritize internal context over new context.
+        Thread *thread = GetThreadFromHandle(hActiveThread);
+        if(thread)
+        {
+            return thread->registers.Get(r);
+        }
+
         return Registers(hActiveThread).Get(r);
     }
 
@@ -364,10 +393,15 @@ public:
 
         ThreadSuspender suspender(hActiveThread, mIsRunning);
 
+        Thread* thread = GetThreadFromHandle(hActiveThread);
+
         auto r = registerFromDword(IndexOfRegister);
         if (r != Registers::R::Invalid)
         {
-            Registers(hActiveThread).Set(r, NewRegisterValue);
+            if (thread)
+                thread->registers.Set(r, NewRegisterValue);
+            else
+                Registers(hActiveThread).Set(r, NewRegisterValue);
             return true;
         }
 
@@ -1274,3 +1308,5 @@ private: //variables
     PROCESS_INFORMATION* mAttachProcessInfo = nullptr;
     wchar_t szDebuggeeName[MAX_PATH] = L"";
 };
+
+extern Emulator emu;

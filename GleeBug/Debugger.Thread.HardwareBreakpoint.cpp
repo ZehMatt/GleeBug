@@ -187,8 +187,6 @@ namespace GleeBug
         if ((address % int(size) != 0))
             return false;
 
-        Registers registers(hThread, CONTEXT_DEBUG_REGISTERS);
-
         //set the address register
         switch (slot)
         {
@@ -221,8 +219,6 @@ namespace GleeBug
 
     bool Thread::DeleteHardwareBreakpoint(HardwareSlot slot)
     {
-        Registers registers(hThread, CONTEXT_DEBUG_REGISTERS);
-
         //zero the address register
         switch (slot)
         {

@@ -23,7 +23,7 @@ namespace GleeBug
 
     void Process::StepOver(const StepCallback & cbStep)
     {
-        auto gip = Registers(thread->hThread, CONTEXT_CONTROL).Gip();
+        auto gip = thread->registers.Gip();
         unsigned char data[16];
         if (MemReadSafe(gip, data, sizeof(data)))
         {

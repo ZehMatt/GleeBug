@@ -151,6 +151,7 @@ public:
         auto ptr = (Type*)mRegisters->getPtr(RegisterIndex);
         if (ptr)
             *ptr = value;
+        mRegisters->mInvalidated = true;
     }
 
     /**
