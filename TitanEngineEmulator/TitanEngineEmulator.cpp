@@ -1,4 +1,4 @@
-#include "ntdll.h"
+﻿#include "ntdll.h"
 #include "Emulator.h"
 
 Emulator emu;
