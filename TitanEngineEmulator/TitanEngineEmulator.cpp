@@ -1,7 +1,7 @@
-#include "ntdll.h"
+﻿#include "ntdll.h"
 #include "Emulator.h"
 
-Emulator emu;
+TitanEngine::Emulator emu;
 
 //Debugger basics
 __declspec(dllexport) void* TITCALL InitDebugW(const wchar_t* szFileName, const wchar_t* szCommandLine, const wchar_t* szCurrentFolder)
